@@ -120,9 +120,11 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices.Validation
             //act
             var res = _addDoctorRequestValidator.ValidateRequest(request);
 
+            string[] expectedErrors = { "Email must be populated", "Email must be a valid email address" };
+
             //assert
             res.PassedValidation.Should().BeFalse();
-            res.Errors.Should().Contain("Email must be a valid email address");
+            res.Errors.Should().IntersectWith(expectedErrors);
         }
 
         [TestCase("user@domain.com")]

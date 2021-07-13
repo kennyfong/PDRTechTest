@@ -1,8 +1,10 @@
 ﻿using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Service.DoctorServices.Requests;
 using PDR.PatientBooking.Service.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 
 namespace PDR.PatientBooking.Service.DoctorServices.Validation
 {
@@ -20,6 +22,9 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
             var result = new PdrValidationResult(true);
 
             if (MissingRequiredFields(request, ref result))
+                return result;
+
+            if (WrongFormatFields(request, ref result))
                 return result;
 
             if (DoctorAlreadyInDb(request, ref result))
@@ -40,6 +45,30 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
 
             if (string.IsNullOrEmpty(request.Email))
                 errors.Add("Email must be populated");
+
+            if (errors.Any())
+            {
+                result.PassedValidation = false;
+                result.Errors.AddRange(errors);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool WrongFormatFields(AddDoctorRequest request, ref PdrValidationResult result)
+        {
+            var errors = new List<string>();
+
+            // Can be replaced with MailAddress.TryCreate in .Net 5 to avoid using ugly Try/Catch
+            try
+            {
+                MailAddress m = new MailAddress(request.Email);
+            }
+            catch (FormatException)
+            {
+                errors.Add("Email must be a valid email address");
+            }                
 
             if (errors.Any())
             {
