@@ -10,10 +10,8 @@ using PDR.PatientBooking.Service.BookingServices.Requests;
 using PDR.PatientBooking.Service.BookingServices.Validation;
 using PDR.PatientBooking.Service.Validation;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace PDR.PatientBooking.Service.Tests.ClinicServices
+namespace PDR.PatientBooking.Service.Tests.BookingServices
 {
     [TestFixture]
     public class BookingServiceTests
@@ -136,6 +134,83 @@ namespace PDR.PatientBooking.Service.Tests.ClinicServices
 
         [Test]
         public void GetPatientNextAppointment_ReturnsNextAppointment()
+        {
+            DateTime startTime = DateTime.Now.AddDays(1);
+            DateTime endTime = DateTime.Now.AddDays(1).AddMinutes(30);
+
+            //arrange
+            var order = _fixture.Build<Order>()
+                .With(o => o.StartTime, startTime)
+                .With(o => o.StartTime, endTime)
+                .Create();
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            //act
+            var res = _bookingService.GetPatientNextAppointment(order.PatientId);
+
+            //assert
+            res.StartTime.Should().Equals(startTime);
+        }
+
+        [Test]
+        public void CancelAppointment_ReturnsSuccessful()
+        {
+            DateTime startTime = DateTime.Now.AddDays(1);
+            DateTime endTime = DateTime.Now.AddDays(1).AddMinutes(30);
+
+            //arrange
+            var order = _fixture.Build<Order>()
+                .With(o => o.StartTime, startTime)
+                .With(o => o.StartTime, endTime)
+                .With(o => o.IsCancelled, false)
+                .Create();
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            var expected = new Order
+            {
+                DoctorId = order.DoctorId,
+                EndTime = order.EndTime,
+                StartTime = order.StartTime,
+                PatientId = order.PatientId,
+                IsCancelled = true
+            };
+
+            //act
+            _bookingService.CancelOrder(order.Id);
+
+            //assert
+            _context.Order.Should().ContainEquivalentOf(expected, options => options
+                .Excluding(order => order.Doctor)
+                .Excluding(order => order.Patient)
+                .Excluding(order => order.SurgeryType)
+                .Excluding(order => order.Id));
+        }
+
+        [Test]
+        public void GetPatientNextAppointmentAfterMultipleAppointmentsAndCancelNext_ReturnsNextAppointment()
+        {
+            DateTime startTime = DateTime.Now.AddDays(1);
+            DateTime endTime = DateTime.Now.AddDays(1).AddMinutes(30);
+
+            //arrange
+            var order = _fixture.Build<Order>()
+                .With(o => o.StartTime, startTime)
+                .With(o => o.StartTime, endTime)
+                .Create();
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            //act
+            var res = _bookingService.GetPatientNextAppointment(order.PatientId);
+
+            //assert
+            res.StartTime.Should().Equals(startTime);
+        }
+
+        [Test]
+        public void GetPatientNextAppointmentAfterOneAppointmentAndCancellation_ThrowsException()
         {
             DateTime startTime = DateTime.Now.AddDays(1);
             DateTime endTime = DateTime.Now.AddDays(1).AddMinutes(30);
