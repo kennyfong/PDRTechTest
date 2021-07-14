@@ -93,6 +93,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             var order = _fixture.Build<Order>()
                 .With(o => o.StartTime, startTime)
                 .With(o => o.StartTime, endTime)
+                .With(o => o.IsCancelled, false)
                 .Create();
             _context.Order.Add(order);
             _context.SaveChanges();
@@ -142,6 +143,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             var order = _fixture.Build<Order>()
                 .With(o => o.StartTime, startTime)
                 .With(o => o.StartTime, endTime)
+                .With(o => o.IsCancelled, false)
                 .Create();
             _context.Order.Add(order);
             _context.SaveChanges();
@@ -198,6 +200,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             var order = _fixture.Build<Order>()
                 .With(o => o.StartTime, startTime)
                 .With(o => o.StartTime, endTime)
+                .With(o => o.IsCancelled, false)
                 .Create();
             _context.Order.Add(order);
             _context.SaveChanges();
@@ -219,15 +222,17 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             var order = _fixture.Build<Order>()
                 .With(o => o.StartTime, startTime)
                 .With(o => o.StartTime, endTime)
+                .With(o => o.IsCancelled, true)
                 .Create();
             _context.Order.Add(order);
+
             _context.SaveChanges();
 
-            //act
-            var res = _bookingService.GetPatientNextAppointment(order.PatientId);
+            //assert
+            var exception = Assert.Throws<ArgumentNullException>(() => _bookingService.GetPatientNextAppointment(order.PatientId));
 
             //assert
-            res.StartTime.Should().Equals(startTime);
+            exception.Message.Should().Contain("There are no next appointment");
         }
 
         [TearDown]
