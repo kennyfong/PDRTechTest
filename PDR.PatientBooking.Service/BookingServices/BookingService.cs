@@ -81,7 +81,7 @@ namespace PDR.PatientBooking.Service.BookingServices
             else
             {
                 var bookings2 = bockings.Where(x => x.PatientId == identificationNumber);
-                if (bookings2.Where(x => x.StartTime > DateTime.Now).Count() == 0)
+                if (bookings2.Where(x => x.StartTime > DateTime.Now && !x.IsCancelled).Count() == 0)
                 {
                     throw new ArgumentNullException("There are no next appointment");
                 }
